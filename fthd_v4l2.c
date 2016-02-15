@@ -41,7 +41,6 @@
 #define FTHD_NUM_FORMATS 2 /* NV16 is disabled for now */
 
 static int fthd_buffer_queue_setup(struct vb2_queue *vq,
-				   const struct v4l2_format *fmt,
 				   unsigned int *nbuffers, unsigned int *nplanes,
 				   unsigned int sizes[], void *alloc_ctxs[])
 {
@@ -49,14 +48,13 @@ static int fthd_buffer_queue_setup(struct vb2_queue *vq,
 	struct v4l2_pix_format *cur_fmt = &dev_priv->fmt.fmt;
 	int i, total_size = 0;
 
+	/* FIXME: We assume single plane format here but not below */
+	if (*nplanes)
+		return sizes[0] < (cur_fmt->bytesperline * cur_fmt->height) ? -EINVAL : 0;
+
 	*nplanes = dev_priv->fmt.planes;
 
 	if (!*nplanes)
-		return -EINVAL;
-
-	/* FIXME: We assume single plane format here but not below */
-	if (fmt && fmt->fmt.pix.sizeimage <
-	    (cur_fmt->bytesperline * cur_fmt->height))
 		return -EINVAL;
 
 	for (i = 0; i < *nplanes; i++) {
